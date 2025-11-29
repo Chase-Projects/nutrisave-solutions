@@ -23,6 +23,13 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
     return value >= constraint.min && value <= constraint.max;
   };
 
+  // Find the maximum daily value percentage for normalizing progress bars
+  const maxDailyValuePercent = Math.max(
+    ...Object.keys(WHO_CONSTRAINTS).map((nutrient) =>
+      getDailyValuePercent(nutrient as keyof typeof WHO_CONSTRAINTS)
+    )
+  );
+
   return (
     <div className="space-y-6 animate-in fade-in-50 duration-700">
       {/* Summary Cards */}
@@ -111,6 +118,8 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
             (nutrient) => {
               const dailyValuePercent = getDailyValuePercent(nutrient);
               const isMet = isNutrientMet(nutrient);
+              // Normalize bar width relative to the highest percentage
+              const normalizedProgress = (dailyValuePercent / maxDailyValuePercent) * 100;
 
               return (
                 <div key={nutrient} className="space-y-2">
@@ -130,7 +139,7 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
                     </span>
                   </div>
                   <Progress
-                    value={Math.min(dailyValuePercent, 100)}
+                    value={normalizedProgress}
                     className="h-2"
                   />
                 </div>
