@@ -20,7 +20,7 @@ export interface OptimizationResult {
   feasible: boolean;
 }
 
-export function solveNutritionOptimization(): OptimizationResult {
+export function solveNutritionOptimization(foodDatabase: Food[] = USDA_FOODS): OptimizationResult {
   // Build the LP model
   const model: any = {
     optimize: "cost",
@@ -41,7 +41,7 @@ export function solveNutritionOptimization(): OptimizationResult {
   model.constraints.vitaminC = { min: WHO_CONSTRAINTS.vitaminC.min };
 
   // Add variables for each food (in 100g units)
-  USDA_FOODS.forEach((food) => {
+  foodDatabase.forEach((food) => {
     model.variables[food.id] = {
       cost: food.cost,
       energy_min: food.energy,
@@ -74,7 +74,7 @@ export function solveNutritionOptimization(): OptimizationResult {
   };
 
   if (solution.feasible) {
-    USDA_FOODS.forEach((food) => {
+    foodDatabase.forEach((food) => {
       const amount = solution[food.id] || 0;
       if (amount > 0.01) {
         // Only include foods with meaningful amounts

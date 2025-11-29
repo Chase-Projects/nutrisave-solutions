@@ -1,22 +1,36 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OptimizationResults } from "@/components/OptimizationResults";
+import { FoodSearch } from "@/components/FoodSearch";
 import { solveNutritionOptimization, type OptimizationResult } from "@/utils/lpSolver";
-import { Calculator, Info } from "lucide-react";
+import { USDA_FOODS, type Food } from "@/utils/nutritionData";
+import { Calculator, Info, Database } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Index = () => {
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [selectedFoods, setSelectedFoods] = useState<Food[]>([]);
+  const [useCustomFoods, setUseCustomFoods] = useState(false);
 
-  const handleOptimize = () => {
+  const handleOptimize = (customFoods?: Food[]) => {
     setIsCalculating(true);
     // Simulate calculation time for better UX
     setTimeout(() => {
-      const optimizationResult = solveNutritionOptimization();
+      const foodDatabase = customFoods && customFoods.length > 0 ? customFoods : USDA_FOODS;
+      const optimizationResult = solveNutritionOptimization(foodDatabase);
       setResult(optimizationResult);
       setIsCalculating(false);
     }, 800);
+  };
+
+  const handleOptimizeWithSelected = () => {
+    if (selectedFoods.length === 0) {
+      return;
+    }
+    setUseCustomFoods(true);
+    handleOptimize(selectedFoods);
   };
 
   return (
@@ -40,24 +54,38 @@ const Index = () => {
             WHO nutrition guidelines from USDA food database
           </p>
 
-          <Button
-            onClick={handleOptimize}
-            disabled={isCalculating}
-            size="lg"
-            className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-xl"
-          >
-            {isCalculating ? (
-              <>
-                <Calculator className="w-5 h-5 mr-2 animate-spin" />
-                Calculating...
-              </>
-            ) : (
-              <>
-                <Calculator className="w-5 h-5 mr-2" />
-                Optimize Meal Plan
-              </>
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              onClick={() => handleOptimize()}
+              disabled={isCalculating}
+              size="lg"
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-xl"
+            >
+              {isCalculating ? (
+                <>
+                  <Calculator className="w-5 h-5 mr-2 animate-spin" />
+                  Calculating...
+                </>
+              ) : (
+                <>
+                  <Calculator className="w-5 h-5 mr-2" />
+                  Quick Optimize
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="bg-primary-foreground/90 text-primary border-primary/20 hover:bg-primary-foreground shadow-xl"
+              onClick={() => {
+                const element = document.getElementById("food-search");
+                element?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              <Database className="w-5 h-5 mr-2" />
+              Custom Food Selection
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -66,42 +94,91 @@ const Index = () => {
         <Alert className="shadow-custom-lg bg-card">
           <Info className="h-4 w-4" />
           <AlertDescription>
-            This tool solves the classic "diet problem" using the Simplex algorithm to minimize
-            daily food costs while satisfying WHO nutritional requirements. All calculations are
-            performed using real USDA food data.
+            This tool uses Linear Programming (Simplex algorithm) to minimize daily food costs
+            while meeting WHO nutritional requirements. Use Quick Optimize for default foods, or
+            search the USDA database to build a custom meal plan.
           </AlertDescription>
         </Alert>
       </div>
 
-      {/* Results Section */}
+      {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 pb-16">
-        {result && result.feasible ? (
-          <OptimizationResults result={result} />
-        ) : result && !result.feasible ? (
-          <Alert variant="destructive" className="shadow-custom-lg">
-            <AlertDescription>
-              No feasible solution found. The constraints may be too strict or the food database
-              insufficient.
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <div className="text-center py-16 space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
-              <Calculator className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <p className="text-muted-foreground">
-              Click "Optimize Meal Plan" to calculate the optimal nutrition solution
-            </p>
-          </div>
-        )}
+        <Tabs defaultValue="optimize" className="w-full">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+            <TabsTrigger value="optimize">Results</TabsTrigger>
+            <TabsTrigger value="search" id="food-search">
+              USDA Search
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="optimize" className="space-y-6">
+            {result && result.feasible ? (
+              <>
+                {useCustomFoods && (
+                  <Alert className="shadow-custom-lg bg-success/5 border-success/20">
+                    <Database className="h-4 w-4 text-success" />
+                    <AlertDescription className="text-success-foreground">
+                      Optimized using {selectedFoods.length} custom foods from USDA database
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <OptimizationResults result={result} />
+              </>
+            ) : result && !result.feasible ? (
+              <Alert variant="destructive" className="shadow-custom-lg">
+                <AlertDescription>
+                  No feasible solution found. Try selecting more diverse foods or using the default
+                  database.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="text-center py-16 space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+                  <Calculator className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground">
+                  Click "Quick Optimize" or select custom foods to calculate the optimal meal plan
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="search" className="space-y-6">
+            <FoodSearch selectedFoods={selectedFoods} onFoodsSelected={setSelectedFoods} />
+            {selectedFoods.length > 0 && (
+              <div className="flex justify-center">
+                <Button
+                  onClick={handleOptimizeWithSelected}
+                  disabled={isCalculating}
+                  size="lg"
+                  className="shadow-xl"
+                >
+                  {isCalculating ? (
+                    <>
+                      <Calculator className="w-5 h-5 mr-2 animate-spin" />
+                      Optimizing...
+                    </>
+                  ) : (
+                    <>
+                      <Calculator className="w-5 h-5 mr-2" />
+                      Optimize with {selectedFoods.length} Selected Foods
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4">
-        <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground">
+        <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground space-y-2">
           <p>
-            Food data from USDA • Nutrition guidelines from WHO • Optimization via Simplex LP
-            Solver
+            Real nutrition data from <strong>USDA FoodData Central API</strong> • Guidelines from WHO
+          </p>
+          <p className="text-xs">
+            Optimization via Simplex LP Solver • Cost estimates are approximate
           </p>
         </div>
       </footer>
