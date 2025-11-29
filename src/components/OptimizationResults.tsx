@@ -111,41 +111,70 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
           Essential Amino Acids Profile
         </h2>
         <p className="text-xs text-muted-foreground mb-4">
-          Percentage of WHO daily minimum requirement (100% = meets daily needs)
+          Percentage of WHO daily minimum requirement
         </p>
         <div className="space-y-4">
-          {(Object.keys(WHO_CONSTRAINTS) as Array<keyof typeof WHO_CONSTRAINTS>).map(
-            (nutrient) => {
-              const dailyValuePercent = getDailyValuePercent(nutrient);
-              const isMet = isNutrientMet(nutrient);
-              // Normalize bar width relative to the highest percentage
-              const normalizedProgress = (dailyValuePercent / maxDailyValuePercent) * 100;
+          {(() => {
+            // Calculate where 100% DV falls on the normalized scale
+            const hundredPercentPosition = (100 / maxDailyValuePercent) * 100;
 
-              return (
-                <div key={nutrient} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium capitalize text-foreground">
-                        {nutrient}
-                      </span>
-                      {isMet && (
-                        <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">
-                          ✓ Met
-                        </Badge>
-                      )}
-                    </div>
-                    <span className={`text-sm font-medium ${dailyValuePercent >= 100 ? 'text-success' : 'text-destructive'}`}>
-                      {dailyValuePercent.toFixed(0)}% DV
-                    </span>
-                  </div>
-                  <Progress
-                    value={normalizedProgress}
-                    className="h-2"
-                  />
-                </div>
-              );
-            }
-          )}
+            return (
+              <>
+                {(Object.keys(WHO_CONSTRAINTS) as Array<keyof typeof WHO_CONSTRAINTS>).map(
+                  (nutrient, index) => {
+                    const dailyValuePercent = getDailyValuePercent(nutrient);
+                    const isMet = isNutrientMet(nutrient);
+                    // Normalize bar width relative to the highest percentage
+                    const normalizedProgress = (dailyValuePercent / maxDailyValuePercent) * 100;
+
+                    return (
+                      <div key={nutrient} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium capitalize text-foreground">
+                              {nutrient}
+                            </span>
+                            {isMet && (
+                              <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">
+                                ✓ Met
+                              </Badge>
+                            )}
+                          </div>
+                          <span className={`text-sm font-medium ${dailyValuePercent >= 100 ? 'text-success' : 'text-destructive'}`}>
+                            {dailyValuePercent.toFixed(0)}% DV
+                          </span>
+                        </div>
+                        <div className="relative">
+                          <Progress
+                            value={normalizedProgress}
+                            className="h-3"
+                          />
+                          {/* 100% DV marker */}
+                          <div
+                            className="absolute -top-1 flex flex-col items-center"
+                            style={{ left: `${hundredPercentPosition}%`, transform: 'translateX(-50%)' }}
+                          >
+                            {/* Show label only on first bar */}
+                            {index === 0 && (
+                              <span className="text-[10px] font-medium text-muted-foreground mb-0.5 whitespace-nowrap">
+                                100%
+                              </span>
+                            )}
+                            {/* Triangle marker pointing down */}
+                            <div
+                              className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-foreground/60"
+                            />
+                            {/* Vertical line through the bar */}
+                            <div className="w-0.5 h-3 bg-foreground/60" />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </>
+            );
+          })()}
         </div>
       </Card>
 
