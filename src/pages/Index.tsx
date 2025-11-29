@@ -50,8 +50,8 @@ const Index = () => {
           </h1>
           
           <p className="text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto">
-            Using linear programming to find the most cost-effective daily meal plan that meets
-            WHO nutrition guidelines from USDA food database
+            Using linear programming to find the most cost-effective plan that satisfies
+            WHO essential amino acid requirements
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -95,8 +95,8 @@ const Index = () => {
           <Info className="h-4 w-4" />
           <AlertDescription>
             This tool uses Linear Programming (Simplex algorithm) to minimize daily food costs
-            while meeting WHO nutritional requirements. Use Quick Optimize for default foods, or
-            search the USDA database to build a custom meal plan.
+            while meeting WHO essential amino acid requirements (histidine, isoleucine, leucine, lysine, 
+            methionine, phenylalanine, threonine, tryptophan, valine). Foods must have amino acid data.
           </AlertDescription>
         </Alert>
       </div>
@@ -175,10 +175,10 @@ const Index = () => {
       <footer className="border-t border-border py-8 px-4">
         <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground space-y-2">
           <p>
-            Real nutrition data from <strong>USDA FoodData Central API</strong> • Guidelines from WHO
+            Amino acid data from food database • WHO/FAO essential amino acid requirements
           </p>
           <p className="text-xs">
-            Optimization via Simplex LP Solver • Cost estimates are approximate
+            Optimization via Simplex LP Solver • Focuses on 9 essential amino acids
           </p>
         </div>
       </footer>

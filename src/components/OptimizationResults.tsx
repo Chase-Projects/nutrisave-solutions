@@ -42,10 +42,10 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
             <div className="p-2 rounded-lg bg-success/10">
               <Activity className="w-5 h-5 text-success" />
             </div>
-            <h3 className="text-sm font-medium text-muted-foreground">Energy</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">Protein</h3>
           </div>
-          <p className="text-3xl font-bold text-foreground">{result.nutrients.energy}</p>
-          <p className="text-xs text-muted-foreground mt-1">kcal per day</p>
+          <p className="text-3xl font-bold text-foreground">{result.nutrients.protein?.toFixed(1) || 0}g</p>
+          <p className="text-xs text-muted-foreground mt-1">Total protein</p>
         </Card>
 
         <Card className="p-6 gradient-card shadow-custom-lg border-accent/10">
@@ -85,10 +85,10 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-primary">
-                  {((food.energy * amount) / 100).toFixed(0)} kcal
+                  {((food.leucine * amount) / 100).toFixed(0)}mg leucine
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {((food.protein * amount) / 100).toFixed(1)}g protein
+                  {((food.lysine * amount) / 100).toFixed(0)}mg lysine
                 </p>
               </div>
             </div>
@@ -96,11 +96,11 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
         </div>
       </Card>
 
-      {/* Nutrient Breakdown */}
+      {/* Amino Acid Breakdown */}
       <Card className="p-6 shadow-custom-lg">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <span className="h-1 w-1 rounded-full bg-primary"></span>
-          Nutritional Profile
+          Essential Amino Acids Profile
         </h2>
         <div className="space-y-4">
           {(Object.keys(WHO_CONSTRAINTS) as Array<keyof typeof WHO_CONSTRAINTS>).map(
@@ -124,7 +124,7 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
                       )}
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {value} / {constraint.min}-{constraint.max} {constraint.unit}
+                      {value.toFixed(1)} / {constraint.min}-{constraint.max} {constraint.unit}
                     </span>
                   </div>
                   <Progress
@@ -137,6 +137,50 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
           )}
         </div>
       </Card>
+
+      {/* Other Nutrients (for reference) */}
+      {(result.nutrients.energy || result.nutrients.protein) && (
+        <Card className="p-6 shadow-custom-lg">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <span className="h-1 w-1 rounded-full bg-muted-foreground"></span>
+            Other Nutritional Information
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {result.nutrients.energy && (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Energy</p>
+                <p className="text-lg font-semibold text-foreground">
+                  {result.nutrients.energy.toFixed(0)} kcal
+                </p>
+              </div>
+            )}
+            {result.nutrients.protein && (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Protein</p>
+                <p className="text-lg font-semibold text-foreground">
+                  {result.nutrients.protein.toFixed(1)} g
+                </p>
+              </div>
+            )}
+            {result.nutrients.carbs && (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Carbs</p>
+                <p className="text-lg font-semibold text-foreground">
+                  {result.nutrients.carbs.toFixed(1)} g
+                </p>
+              </div>
+            )}
+            {result.nutrients.fat && (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Fat</p>
+                <p className="text-lg font-semibold text-foreground">
+                  {result.nutrients.fat.toFixed(1)} g
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

@@ -24,6 +24,17 @@ export interface USDASearchResult {
 
 // Nutrient IDs from USDA database
 const NUTRIENT_IDS = {
+  // Essential amino acids (mg)
+  histidine: 1221,
+  isoleucine: 1212,
+  leucine: 1213,
+  lysine: 1214,
+  methionine: 1215,
+  phenylalanine: 1217,
+  threonine: 1211,
+  tryptophan: 1210,
+  valine: 1219,
+  // Other nutrients
   energy: 1008, // kcal
   protein: 1003, // g
   carbs: 1005, // g
@@ -81,6 +92,12 @@ export function parseUSDAFoodToNutrition(usdaFood: USDAFood) {
     return nutrient?.value || 0;
   };
 
+  // Convert amino acids from g to mg (USDA reports in grams)
+  const getAminoAcid = (nutrientId: number): number => {
+    const value = getNutrient(nutrientId);
+    return value * 1000; // Convert g to mg
+  };
+
   // Estimate cost based on food type (since USDA doesn't provide pricing)
   // This is a rough estimate - could be improved with a separate pricing database
   const estimatedCostPer100g = estimateFoodCost(usdaFood.description, usdaFood.foodCategory);
@@ -90,6 +107,17 @@ export function parseUSDAFoodToNutrition(usdaFood: USDAFood) {
     name: usdaFood.description,
     category: usdaFood.foodCategory || "Other",
     cost: estimatedCostPer100g,
+    // Essential amino acids (mg per 100g)
+    histidine: getAminoAcid(NUTRIENT_IDS.histidine),
+    isoleucine: getAminoAcid(NUTRIENT_IDS.isoleucine),
+    leucine: getAminoAcid(NUTRIENT_IDS.leucine),
+    lysine: getAminoAcid(NUTRIENT_IDS.lysine),
+    methionine: getAminoAcid(NUTRIENT_IDS.methionine),
+    phenylalanine: getAminoAcid(NUTRIENT_IDS.phenylalanine),
+    threonine: getAminoAcid(NUTRIENT_IDS.threonine),
+    tryptophan: getAminoAcid(NUTRIENT_IDS.tryptophan),
+    valine: getAminoAcid(NUTRIENT_IDS.valine),
+    // Other nutrients (for display)
     energy: getNutrient(NUTRIENT_IDS.energy),
     protein: getNutrient(NUTRIENT_IDS.protein),
     carbs: getNutrient(NUTRIENT_IDS.carbs),
