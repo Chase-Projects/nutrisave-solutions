@@ -10,13 +10,14 @@ interface OptimizationResultsProps {
 }
 
 export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
-  const getNutrientProgress = (nutrient: keyof typeof result.nutrients) => {
+  // Calculate percentage of daily value (based on minimum requirement)
+  const getDailyValuePercent = (nutrient: keyof typeof WHO_CONSTRAINTS) => {
     const value = result.nutrients[nutrient];
     const constraint = WHO_CONSTRAINTS[nutrient];
-    return (value / constraint.max) * 100;
+    return (value / constraint.min) * 100;
   };
 
-  const isNutrientMet = (nutrient: keyof typeof result.nutrients) => {
+  const isNutrientMet = (nutrient: keyof typeof WHO_CONSTRAINTS) => {
     const value = result.nutrients[nutrient];
     const constraint = WHO_CONSTRAINTS[nutrient];
     return value >= constraint.min && value <= constraint.max;
@@ -85,10 +86,10 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-primary">
-                  {((food.leucine * amount) / 100).toFixed(0)}mg leucine
+                  {((food.protein || 0) * (amount / 100)).toFixed(1)}g protein
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {((food.lysine * amount) / 100).toFixed(0)}mg lysine
+                  {((food.energy || 0) * (amount / 100)).toFixed(0)} kcal
                 </p>
               </div>
             </div>
@@ -102,13 +103,14 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
           <span className="h-1 w-1 rounded-full bg-primary"></span>
           Essential Amino Acids Profile
         </h2>
+        <p className="text-xs text-muted-foreground mb-4">
+          Percentage of WHO daily minimum requirement (100% = meets daily needs)
+        </p>
         <div className="space-y-4">
           {(Object.keys(WHO_CONSTRAINTS) as Array<keyof typeof WHO_CONSTRAINTS>).map(
             (nutrient) => {
-              const value = result.nutrients[nutrient];
-              const constraint = WHO_CONSTRAINTS[nutrient];
+              const dailyValuePercent = getDailyValuePercent(nutrient);
               const isMet = isNutrientMet(nutrient);
-              const progress = getNutrientProgress(nutrient);
 
               return (
                 <div key={nutrient} className="space-y-2">
@@ -123,12 +125,12 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
                         </Badge>
                       )}
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {value.toFixed(1)} / {constraint.min}-{constraint.max} {constraint.unit}
+                    <span className={`text-sm font-medium ${dailyValuePercent >= 100 ? 'text-success' : 'text-destructive'}`}>
+                      {dailyValuePercent.toFixed(0)}% DV
                     </span>
                   </div>
                   <Progress
-                    value={Math.min(progress, 100)}
+                    value={Math.min(dailyValuePercent, 100)}
                     className="h-2"
                   />
                 </div>

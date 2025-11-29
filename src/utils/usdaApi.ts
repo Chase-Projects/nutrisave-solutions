@@ -178,3 +178,31 @@ function estimateFoodCost(description: string, category?: string): number {
   
   return 0.30; // Default estimate
 }
+
+// Check if a food has sufficient amino acid data for optimization
+export function hasAminoAcidData(usdaFood: USDAFood): boolean {
+  const essentialAminoAcids = [
+    NUTRIENT_IDS.histidine,
+    NUTRIENT_IDS.isoleucine,
+    NUTRIENT_IDS.leucine,
+    NUTRIENT_IDS.lysine,
+    NUTRIENT_IDS.methionine,
+    NUTRIENT_IDS.phenylalanine,
+    NUTRIENT_IDS.threonine,
+    NUTRIENT_IDS.tryptophan,
+    NUTRIENT_IDS.valine,
+  ];
+
+  // Count how many essential amino acids have data
+  let aminoAcidsWithData = 0;
+  essentialAminoAcids.forEach((nutrientId) => {
+    const nutrient = usdaFood.foodNutrients.find((n) => n.nutrientId === nutrientId);
+    if (nutrient && nutrient.value > 0) {
+      aminoAcidsWithData++;
+    }
+  });
+
+  // Require at least 7 out of 9 essential amino acids to have data
+  // (some foods might be missing 1-2 amino acids but still be useful)
+  return aminoAcidsWithData >= 7;
+}
